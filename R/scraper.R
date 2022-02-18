@@ -164,5 +164,8 @@ date_parse <- function(x) {
   # In case this didn't not work on some exotic OS.
   if (is.na(out)) return(x)
 
+  # No need to display the date in GMT.
+  attr(out, "tzone") <- NULL
+
   out
 }
