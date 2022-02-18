@@ -4,6 +4,8 @@
 # csfd
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/jchrom/csfd/workflows/R-CMD-check/badge.svg)](https://github.com/jchrom/csfd/actions)
 <!-- badges: end -->
 
 Smyslem balíčku csfd je umožnit novinářům a akademickým pracovníkům
@@ -45,8 +47,8 @@ tng
 #> <csfd_scraper>
 #> path: /film/69432-star-trek-nova-generace/483364-serie-3/prehled/
 #> html: <xml_document/xml_node>
-#> date: 2022-02-18 18:57:11
-#> body: 85.4 Kb
+#> date: 2022-02-18 19:03:36
+#> body: 84.6 Kb
 #>  $reviews,  $releases,  $summary,  $plots,  $jobs,  $titles,  $episodes,
 #>  $ratings, and  $ranks
 ```

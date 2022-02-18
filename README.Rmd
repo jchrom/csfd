@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # csfd
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/jchrom/csfd/workflows/R-CMD-check/badge.svg)](https://github.com/jchrom/csfd/actions)
 <!-- badges: end -->
 
 Smyslem balíčku csfd je umožnit novinářům a akademickým pracovníkům skrejpování
