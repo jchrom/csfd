@@ -1,0 +1,7 @@
+#' @keywords internal
+"_PACKAGE"
+
+## usethis namespace: start
+#' @importFrom rvest html_element html_elements html_text2 html_attr
+## usethis namespace: end
+NULL
