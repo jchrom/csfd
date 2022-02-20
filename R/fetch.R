@@ -42,7 +42,7 @@ csfd_fetch <- function(url, quiet = FALSE) {
   }
 
   if (length(url$query)) {
-    req <- rlang::inject(httr2::req_url_query(req, !!!url$query))
+    req <- httr2::req_url_query(req, !!!url$query)
   }
 
   resp <- csfd_request_perform(req, quiet = quiet)
