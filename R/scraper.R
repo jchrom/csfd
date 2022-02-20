@@ -90,8 +90,10 @@ check_response <- function(resp) {
     rlang::abort("`resp` must inherit from <httr2_response>")
   }
 
-  if (!identical(httr2::url_parse(resp$url)$hostname, "www.csfd.cz")) {
-    rlang::abort("`resp` must originate in CSFD https://www.csfd.cz")
+  allowed <- paste0("www.csfd.", c("cz", "sk"))
+
+  if (!any(httr2::url_parse(resp$url)$hostname %in% allowed)) {
+    rlang::abort("`resp` must originate in CSFD https://www.csfd.cz or .sk")
   }
 
   NULL
