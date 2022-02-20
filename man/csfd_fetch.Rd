@@ -2,20 +2,26 @@
 % Please edit documentation in R/fetch.R
 \name{csfd_fetch}
 \alias{csfd_fetch}
-\title{Perform A Scraper Request}
+\title{Issue A Scrape Request}
 \usage{
 csfd_fetch(url, quiet = FALSE)
 }
 \arguments{
-\item{url}{A CSFD URL, even a partial one, e.g. \code{"/film/9834-star-trek-film"}}
+\item{url}{A CSFD URL, incl. a partial one, e.g. \code{"/film/9834-star-trek-film"}}
 
-\item{quiet}{If \code{TRUE}, request status will not be printed on the console.}
+\item{quiet}{If \code{TRUE}, request status will not be printed on the console.
+
+This indicates whether the request is being executed or has been completed
+and with what status. It also prints out the response URL, which may be
+different from the request URL, because the server always returns a complete
+URL rather than its short version (e.g. \code{tvurce/453}).}
 }
 \value{
 An object of class \link{csfd_scraper}.
 }
 \description{
-Download a CSFD page and return a scraper object.
+Download a single CSFD page and return a scraper object. Rate is throttled
+at 10 requests per minute.
 }
 \examples{
 
