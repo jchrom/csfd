@@ -29,11 +29,7 @@ csfd_fetch <- function(url, quiet = FALSE) {
 
   url <- httr2::url_parse(url)
 
-  req <- "https://www.csfd.cz" %>%
-    httr2::request() %>%
-    httr2::req_user_agent(pkg_ver(c("csfd", "httr2"))) %>%
-    httr2::req_throttle(10/60) %>%
-    httr2::req_method("get")
+  req <- csfd_request_new("GET")
 
   if (length(url$path)) {
     req <- httr2::req_url_path(req, url$path)
@@ -43,48 +39,7 @@ csfd_fetch <- function(url, quiet = FALSE) {
     req <- rlang::inject(httr2::req_url_query(req, !!!url$query))
   }
 
-  cat_status(req, quiet)
-
-  resp <- httr2::req_perform(req)
-
-  cat_status(resp, quiet)
+  resp <- csfd_request_perform(req, quiet = quiet)
 
   csfd_scraper(resp)
-}
-
-pkg_ver <- function(pkg) {
-  paste(pkg, utils::installed.packages()[pkg, "Version"], sep = "/", collapse = " ")
-}
-
-cat_status <- function(x, quiet) {
-
-  if (quiet) return()
-
-  now <- format(Sys.time(), format = "%H:%M:%S")
-
-  url <- substr(x$url, 20, 200)
-
-  if (inherits(x, "httr2_request")) {
-    cat_line(inline("{now} [ requesting ] {url}"))
-    return()
-  }
-
-  cat_line(clear())
-  cat_line(rn(inline("{now} [ {.field {httr2::resp_status_desc(x)}} ] {url}")))
-}
-
-cat_line <- function(x) {
-  cat(x, sep = "")
-}
-
-clear <- function() {
-  paste0("\r", stringr::str_pad("", cli::console_width()))
-}
-
-rn <- function(x) {
-  c("\r", x, "\n")
-}
-
-inline <- function(...) {
-  cli::ansi_strtrim(cli::format_inline(..., .envir = rlang::caller_env()))
 }
