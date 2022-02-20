@@ -92,6 +92,13 @@ scraper_list_build <- function() {
     ".*" = list(listing = awards_listing_scrape)
   )
 
+  `podrobne-vyhledavani` <- list(
+    ".*" = list(
+      results = search_results_scrape,
+      paginator = search_paginator_scrape
+    )
+  )
+
   list(
     tv_show = tv_show,
     tv_show_season = tv_show_season,
@@ -100,6 +107,7 @@ scraper_list_build <- function() {
     tvurce = tvurce,
     uzivatel = uzivatel,
     kino = kino,
-    oceneni = oceneni
+    oceneni = oceneni,
+    `podrobne-vyhledavani` = `podrobne-vyhledavani`
   )
 }
