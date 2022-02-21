@@ -63,7 +63,7 @@ scraper_list_build <- function() {
       filmography = creator_filmography_scrape,
       fanclub     = misc_fanclub_scrape
     ),
-    "/biografie" = list(
+    "^/biografie" = list(
       bio = creator_bio_scrape
     )
   )
@@ -76,16 +76,16 @@ scraper_list_build <- function() {
       origins = user_origins_scrape,
       fanclub = misc_fanclub_scrape
     ),
-    "/hodnoceni" = list(
+    "^/hodnoceni" = list(
       ratings = misc_ratings_scrape
     ),
-    "/recenze" = list(
+    "^/recenze" = list(
       reviews = misc_reviews_scrape
     )
   )
 
   kino <- list(
-    "/prehled" = list(releases = kino_releases_scrape)
+    "^/prehled" = list(releases = kino_releases_scrape)
   )
 
   oceneni <- list(
