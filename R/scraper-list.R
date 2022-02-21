@@ -99,6 +99,11 @@ scraper_list_build <- function() {
     )
   )
 
+  zebricky <- list(
+    "^/(vlastni|serialy|filmy)" = list(titles = leaderboard_titles_scrape),
+    "^/(herci|reziseri|scenariste)" = list(creators = leaderboard_creators_scrape)
+  )
+
   list(
     tv_show = tv_show,
     tv_show_season = tv_show_season,
@@ -108,6 +113,7 @@ scraper_list_build <- function() {
     uzivatel = uzivatel,
     kino = kino,
     oceneni = oceneni,
-    `podrobne-vyhledavani` = `podrobne-vyhledavani`
+    `podrobne-vyhledavani` = `podrobne-vyhledavani`,
+    zebricky = zebricky
   )
 }
