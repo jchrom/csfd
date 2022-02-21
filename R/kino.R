@@ -16,18 +16,18 @@ kino_releases_scrape = function(html) {
 
     title_id = tbody %>%
       html_element(".name > h3 > a") %>%
-      csfd_href(),
+      html_href_id(),
 
     premiere = tbody %>%
       html_element(".name > h3 > span") %>%
-      csfd_int(),
+      html_int(),
 
     premiere_cz = tbody %>%
       html_element(".date-only") %>%
       html_text2() %>%
       na_fill_down() %>%
       paste0(year) %>%
-      csfd_date(),
+      str_extract_date(),
 
     distributor = tbody %>%
       html_element(".dist") %>%

@@ -33,18 +33,17 @@ csfd_film_subtype_parse <- function(resp) {
     httr2::resp_body_html() %>%
     html_element(".film-header-name > span[class='type']") %>%
     html_text2() %>%
-    # This includes non-ascii characters, so better take only the first
-    # and last letter, easier to index with.
-    sub("(..).+(..)$", "\\1\\2", .)
+    # Replace non-ascii characters to appease R-CMD-check.
+    stringr::str_replace_all("[^[:ascii:]]", ".")
 
   if (is.na(film_subtype)) {
-    film_subtype <- "(fm)"
+    film_subtype <- "(film)"
   }
 
-  c("(ea)" = "tv_show_episode",
-    "(se)" = "tv_show_season",
-    "(sa)" = "tv_show_season", # bratia Slovaci oziju!
-    "(sl)" = "tv_show",
-    "(fm)" = "film"
+  c("(epizoda)" = "tv_show_episode",
+    "(s.rie)"   = "tv_show_season",
+    "(s.ria)"   = "tv_show_season", # bratia Slovaci oziju!
+    "(seri.l)"  = "tv_show",
+    "(film)"    = "film"
   )[[film_subtype]]
 }

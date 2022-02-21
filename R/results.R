@@ -12,11 +12,11 @@ search_results_scrape <- function(html) {
 
     title_id = tr %>%
       html_elements("h3 > a") %>%
-      csfd_href(),
+      html_href_id(),
 
     released = tr %>%
       html_elements("h3 > span") %>%
-      csfd_int(),
+      html_int(),
 
     genre = tr %>%
       html_elements("td.genre") %>%
@@ -32,13 +32,17 @@ search_paginator_scrape <- function(html) {
 
   tibble::tibble(
 
-    page_n = csfd_page_id(html),
+    page_n = html %>%
+      html_element("head > link[rel='canonical']") %>%
+      html_attr("href") %>%
+      stringr::str_extract("(?<=[?&]page=)[0-9]+") %>%
+      as.integer(),
 
-    page_prev = html %>%
+    prev_url = html %>%
       html_element("a.page-prev") %>%
       html_attr("href"),
 
-    page_next = html %>%
+    next_url = html %>%
       html_element("a.page-next") %>%
       html_attr("href")
   )

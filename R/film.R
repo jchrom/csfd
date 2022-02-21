@@ -4,7 +4,7 @@ film_summary_scrape <- function(html) {
     html_element(".film-header-name > h1") %>%
     html_text2()
 
-  id <- csfd_page_id(html)
+  id <- csfd_canonical_id(html)
 
   genre <- html %>%
     html_element(".film-info-content > .genres") %>%
@@ -88,7 +88,9 @@ film_plots_scrape <- function(html) {
 
     text = plots %>%
       html_elements("p") %>%
-      html_text2(),
+      html_text2() %>%
+      # Trailing author name in parentheses.
+      stringr::str_remove(" ?(\\.{3})? ?\\([^\\)]+\\)$"),
 
     author = plots %>%
       html_element("em") %>%
@@ -97,7 +99,7 @@ film_plots_scrape <- function(html) {
 
     author_id = plots %>%
       html_element("em > a") %>%
-      csfd_href()
+      html_href_id()
   )
 }
 
@@ -107,21 +109,21 @@ film_ranks_scrape <- function(html) {
 
     rated = html %>%
       html_element(".ratings-btn > a > span") %>%
-      csfd_int(),
+      html_int(),
 
     rating = html %>%
       html_element(".box-rating > .rating-average") %>%
       html_text2() %>%
-      csfd_dbl(0.01),
+      str_extract_percent(),
 
     fans = html %>%
       # Ensure element is not selected if greyed out (return NA instead).
       html_element("li[class='tab-nav-item fans-btn'] > a > span") %>%
-      csfd_int(),
+      html_int(),
 
     ranking = html %>%
       html_element(".box-rating > .ranking > a") %>%
-      csfd_int(),
+      html_int(),
   )
 }
 
@@ -147,7 +149,7 @@ film_jobs_scrape <- function(html) {
 
     creator_id = div %>%
       html_elements("a:not([href='#'])") %>%
-      csfd_href()
+      html_href_id()
   )
 }
 
@@ -174,7 +176,7 @@ film_cast_scrape <- function(html) {
 
     actor_id = articles %>%
       html_element("h3 > a") %>%
-      csfd_href() %>%
+      html_href_id() %>%
       rep_along_times(ul),
 
     origin = articles %>%
@@ -188,11 +190,11 @@ film_cast_scrape <- function(html) {
 
     best_id = h3 %>%
       html_element("a.film-title-name") %>%
-      csfd_href(),
+      html_href_id(),
 
     best_year = h3 %>%
       html_element("span > span.info") %>%
-      csfd_int()
+      html_int()
   )
 }
 
@@ -212,7 +214,7 @@ film_releases_scrape = function(html) {
     date = li %>%
       html_element("span[title]") %>%
       html_text2() %>%
-      csfd_date(),
+      str_extract_date(),
 
     distributor = li %>%
       html_element("span[title]") %>%
@@ -253,7 +255,7 @@ tv_show_episodes_scrape <- function(html) {
 
     title_id = tr %>%
       html_elements("h3 > a") %>%
-      csfd_href(),
+      html_href_id(),
 
     season = se$season,
 
@@ -262,8 +264,7 @@ tv_show_episodes_scrape <- function(html) {
     rating = tr %>%
       html_element("td.td-rating") %>%
       html_text2() %>%
-      # Ratings with 1 decimal place, e.g. 72,6%, are converted to 0.726.
-      csfd_dbl(0.001)
+      str_extract_percent()
   )
 }
 
@@ -281,7 +282,7 @@ tv_show_season_episodes_scrape <- function(html) {
 
     title_id = ul %>%
       html_elements("h3 > a") %>%
-      csfd_href(),
+      html_href_id(),
 
     season = se$season,
 

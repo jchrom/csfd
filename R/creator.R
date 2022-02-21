@@ -7,7 +7,7 @@ creator_summary_scrape <- function(html) {
 
   tibble::tibble(
 
-    id = csfd_page_id(html),
+    id = csfd_canonical_id(html),
 
     name = html %>%
       html_element("h1") %>%
@@ -15,15 +15,15 @@ creator_summary_scrape <- function(html) {
 
     born = info %>%
       stringr::str_extract("nar\\. [0-9\\.]+") %>%
-      csfd_date(),
+      str_extract_date(),
 
     died = info %>%
       stringr::str_extract("zem\\. [0-9\\.]+") %>%
-      csfd_date(),
+      str_extract_date(),
 
     rank = html %>%
       html_element(".ranking > a") %>%
-      csfd_int()
+      html_int()
   )
 }
 
@@ -50,7 +50,7 @@ creator_filmography_scrape <- function(html) {
 
     title = a %>% html_text2(),
 
-    title_id = a %>% csfd_href(),
+    title_id = a %>% html_href_id(),
 
     note = tr %>%
       html_element("td.name > h3 > span.film-title-info > span") %>%

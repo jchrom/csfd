@@ -12,17 +12,16 @@ misc_reviews_scrape <- function(html) {
 
     author_id = article %>%
       html_element("h3 > a") %>%
-      csfd_href(),
+      html_href_id(),
 
     stars = article %>%
       html_element(".star-rating > span") %>%
-      html_attr("class") %>%
-      csfd_stars(),
+      html_class_stars_int(),
 
     submitted = article %>%
       html_element("time") %>%
       html_text2() %>%
-      csfd_date(),
+      str_extract_date(),
 
     text = article %>%
       html_element("p") %>%
@@ -59,17 +58,16 @@ misc_ratings_scrape <- function(html) {
 
     user_id = li %>%
       html_element("a") %>%
-      csfd_href(),
+      html_href_id(),
 
     stars = li %>%
       html_element(".stars") %>%
-      html_attr("class") %>%
-      csfd_stars(),
+      html_class_stars_int(),
 
     submitted = li %>%
       html_element("span[title], .date-only") %>%
       csfd_attr_or_text("title") %>%
-      csfd_date()
+      str_extract_date()
   )
 }
 
@@ -87,7 +85,7 @@ misc_fanclub_scrape <- function(html) {
 
     user_id = li %>%
       html_element("a") %>%
-      csfd_href()
+      html_href_id()
   )
 }
 

@@ -38,12 +38,12 @@ awards_listing_scrape <- function(html) {
     event = h2,
     award = h3,
 
-    nominated    = li_nominated %>% html_text2(),
-    nominated_id = li_nominated %>% csfd_href(),
+    nominated    = html_text2(li_nominated),
+    nominated_id = html_href_id(li_nominated),
 
-    related      = li_related %>% html_text2(),
-    related_id   = li_related %>% csfd_href(),
+    related    = html_text2(li_related),
+    related_id = html_href_id(li_related),
 
-    winner = li %>% html_attr("class") %>% na_replace("nominee")
+    status = li %>% html_attr("class") %>% na_replace("nominee")
   )
 }
