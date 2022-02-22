@@ -3,12 +3,14 @@ print.csfd_scraper <- function(x, ...) {
 
   cli::cli_text("{.cls {class(x)}}")
 
-  cli::cli_text("{.field path}: {x$path}")
-  cli::cli_text("{.field html}: {.cls {class(x$html)}}")
-  cli::cli_text("{.field date}: {format_dttm(x$date)}")
-  cli::cli_text("{.field body}: {object_size(x$body)}")
+  path <- substr(x$.resp$url, 20, nchar(x$.resp$url))
 
-  fields <- setdiff(names(x), c(".html", ".enclos", "body", "html", "date", "path"))
+  cli::cli_text("{.field path}: {path}")
+  cli::cli_text("{.field html}: {.cls {class(x$html)}}")
+  cli::cli_text("{.field date}: {format_dttm(x$.date)}")
+  cli::cli_text("{.field body}: {object_size(x$.resp$body)}")
+
+  fields <- grep("^(\\.|html$)", names(x), value = TRUE, invert = TRUE)
 
   if (length(fields)) {
     cli::cli_text("{.field {paste0('\u00a0$', fields)}}")

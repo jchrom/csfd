@@ -54,11 +54,9 @@ new_scraper_env <- function(resp) {
   scraper$.enclos <- rlang::env()
   scraper$.enclos$scraper <- scraper
 
-  scraper$body <- read_body(resp$body)
+  scraper$.resp <- resp
 
-  scraper$path <- substr(resp$url, 20, nchar(resp$url))
-
-  scraper$date <- date_parse(resp$headers$date)
+  scraper$.date <- date_parse(resp$headers$date)
 
   makeActiveBinding(
     sym = "html",
@@ -69,19 +67,6 @@ new_scraper_env <- function(resp) {
   lockBinding("html", scraper)
 
   structure(scraper, class = "csfd_scraper")
-}
-
-read_body <- function(body) {
-
-  if (is.raw(body)) {
-    return(body)
-  }
-
-  rlang::inform(paste("Reading `body` from disk:", body))
-
-  body <- paste(readLines(body), collapse = "")
-
-  charToRaw(body)
 }
 
 check_response <- function(resp) {
@@ -132,7 +117,7 @@ html <- function() {
     return(scraper$.html)
   }
 
-  scraper$.html <- xml2::read_html(scraper$body)
+  scraper$.html <- xml2::read_html(scraper$.resp$body)
   scraper$.html
 }
 
