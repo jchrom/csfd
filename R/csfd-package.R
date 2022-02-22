@@ -2,6 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom rvest html_element html_elements html_text2 html_attr
+#' @importFrom rvest html_element html_elements html_text2 html_text html_attr
 ## usethis namespace: end
 NULL

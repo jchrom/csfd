@@ -1,9 +1,13 @@
 creator_summary_scrape <- function(html) {
 
+  pattern <- "(nar|zem)\\. ([0-9\\.]+)[\n\t]*(.[0-9]+ let.)?[\n\t]*([[:alpha:], ]+)"
+
   info <- html %>%
     html_elements(".creator-profile-content > p") %>%
-    html_text2() %>%
-    paste(collapse = "")
+    html_text() %>%
+    stringr::str_match_all(pattern) %>%
+    lapply(`[`, , c(3, 5), drop = TRUE) %>%
+    unlist(use.names = FALSE)
 
   tibble::tibble(
 
@@ -13,13 +17,11 @@ creator_summary_scrape <- function(html) {
       html_element("h1") %>%
       html_text2(),
 
-    born = info %>%
-      stringr::str_extract("nar\\. [0-9\\.]+") %>%
-      str_extract_date(),
+    origin = info[2],
 
-    died = info %>%
-      stringr::str_extract("zem\\. [0-9\\.]+") %>%
-      str_extract_date(),
+    born = info[1] %>% str_extract_date(),
+
+    died = info[3] %>% str_extract_date(),
 
     rank = html %>%
       html_element(".ranking > a") %>%
