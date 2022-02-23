@@ -25,13 +25,14 @@ film_details_parse <- function(x) {
   num    <- "([0-9]+)"
   dash   <- "[^[:ascii:]]"
 
-  released <- num
-  ended    <- num
+  released  <- num
+  ended     <- num
 
   time_min <- "([0-9]+(?! ))"
   time_max <- "([0-9]+(?= min))"
+  time_alt <- num
 
-  pattern <- "{origin}{spacer}{released}{dash}?{ended}?{spacer}{num}? ?(h|x)? ?{num}?{spacer}{time_min}?{spacer}{time_max}?"
+  pattern <- "{origin}{spacer}{released}{dash}?{ended}?{spacer}{num}? ?(h|x)? ?{num}?{spacer}{time_min}?{spacer}{time_max}?{spacer}{time_alt}?"
 
   matches <- stringr::str_match_all(x, glue::glue(pattern))[[1]]
 
@@ -45,6 +46,7 @@ film_details_parse <- function(x) {
 
     time_min = if (is.na(m[7])) m[6] else m[7],
     time_max = if (is.na(m[8])) m[6] else m[8],
+    time_alt = m[9],
 
     time_total = switch(
       m[5],
