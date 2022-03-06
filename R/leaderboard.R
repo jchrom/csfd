@@ -8,15 +8,17 @@ leaderboard_titles_scrape <- function(html) {
     stringr::str_match_all("(.+), ([^,]+)") %>%
     lapply(`[`, , -1, drop = TRUE)
 
+  id <- div %>%
+    html_element("header > h3 > a") %>%
+    html_href_id()
+
   df <- tibble::tibble(
 
     title = div %>%
       html_element("header > h3 > a") %>%
       html_text2(),
 
-    title_id = div %>%
-      html_element("header > h3 > a") %>%
-      html_href_id(),
+    title_id = id,
 
     rank = div %>%
       html_element("header > h3 > span.film-title-user") %>%
@@ -40,18 +42,25 @@ leaderboard_titles_scrape <- function(html) {
       html_int()
   )
 
-  cast <- html_nested_extract(div, id = df$title_id, element = "p:contains('\tHr')")
+  cast <- html_nested_extract(div, id = id, element = unicode_unescape("p:contains('\tHraj\u00ed:')"))
 
   names(cast) <- c("title_id", "cast")
 
-  direction <- html_nested_extract(div, id = df$title_id, element = "p:contains('\tRe')")
+  direction <- html_nested_extract(div, id = id, element = unicode_unescape("p:contains('Re\u017eie:')"))
 
   names(direction) <- c("title_id", "direction")
 
-  df %>%
-    merge(direction, by = "title_id") %>%
-    merge(cast, by = "title_id") %>%
+  out <- df %>%
+    merge(direction, by = "title_id", all.x = TRUE) %>%
+    merge(cast, by = "title_id", all.x = TRUE) %>%
     tibble::as_tibble()
+
+  out[order(out$rank), ]
+}
+
+unicode_unescape <- function(x) {
+  Encoding(x) <- "Unicode"
+  x
 }
 
 html_nested_extract <- function(div, id, element) {
@@ -64,10 +73,7 @@ html_nested_extract <- function(div, id, element) {
     html_elements(element) %>%
     html_elements("a")
 
-  df <- tibble::tibble(
-    creator = html_text2(a),
-    creator_id = html_href_id(a)
-  )
+  df <- tibble::tibble(creator = html_text2(a), creator_id = html_href_id(a))
 
   df_split <- split(df, rep(id, times = times))
 
