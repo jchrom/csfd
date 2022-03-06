@@ -34,7 +34,7 @@ cat_request_status <- function(x) {
 
   status <- switch(as.character(x$status_code),
     `200` = cli::col_green("[ ok ]"),
-    `303` = cli::col_yellow("[ redirected ]"),
+    `303` = cli::col_green("[ redirect ]"),
     cli::col_yellow("[ ", httr2::resp_status_desc(x), " ]")
   )
 
