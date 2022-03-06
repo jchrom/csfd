@@ -49,8 +49,8 @@ tng
 #> <csfd_scraper>
 #> path: /film/69432-star-trek-nova-generace/483364-serie-3/prehled/
 #> html: <xml_document/xml_node>
-#> date: 2022-02-20 16:14:39
-#> body: 84.8 Kb
+#> date: 2022-03-06 10:47:35
+#> body: 83.9 Kb
 #>  $reviews,  $releases,  $summary,  $plots,  $jobs,  $titles,  $episodes,
 #>  $ratings, and  $ranks
 ```
@@ -60,10 +60,10 @@ indexování, například použitím `$`:
 
 ``` r
 tng$summary
-#> # A tibble: 1 × 9
-#>   title      id      genre    origin released ended time_min time_max time_total
-#>   <chr>      <chr>   <chr>    <chr>     <int> <int>    <int>    <int>      <int>
-#> 1 Star Trek… film/4… Sci-Fi … USA        1989  1990       45       60       1219
+#> # A tibble: 1 × 10
+#>   title  id    genre origin released ended time_min time_max time_alt time_total
+#>   <chr>  <chr> <chr> <chr>     <int> <int>    <int>    <int>    <int>      <int>
+#> 1 Star … film… Sci-… USA        1989  1990       45       60       NA       1219
 ```
 
 To je v zásadě vše. `<csfds_scraper>` pozná, o jaký typ stránky se
@@ -106,26 +106,29 @@ Stažení stránky s uživatelskými recenzemi:
 csfd_fetch("/film/69432-star-trek-nova-generace/recenze/?page=2")
 ```
 
-## Podrobné vyhledávání
+## Vyhledávání
 
-Umožňuje funkce `csfd_search()`. Příklad:
+K vyhledávání slouží tři různé funkce:
 
-Seznam českých seriálů od roku 1989, řazený podle průměru hodnocení.
-Narozdíl od `csfd_fetch()` není třeba URL stránky, ale hodnoty vybraných
-parametrů.
+-   [Podrobné vyhledávání](https://www.csfd.cz/podrobne-vyhledavani/):
+    `csfd_search_titles()`
+-   [Tvůrci](https://www.csfd.cz/podrobne-vyhledavani/tvurci/):
+    `csfd_search_creators()`
+-   [Žebříčky](https://www.csfd.cz/zebricky/vlastni-vyber/):
+    `csfd_search_ranks()`
+
+Příklad: Seznam českých seriálů od roku 1989, řazený podle průměru
+hodnocení. Narozdíl od `csfd_fetch()` není třeba URL stránky, ale
+hodnoty vybraných parametrů.
 
 ``` r
-csfd_search(
-  checkbox = "tv_show",
+csfd_search_titles(
+  type = "tv_show",
   origin = list(any = c("Česko", "Československo")),
-  year = c(1989, 2022),
+  released = c(1989, 2022),
   sort = "rating_average"
 )
 ```
-
-Srovnej s výsledkem [podrobného
-vyhledávání](https://www.csfd.cz/podrobne-vyhledavani/?sort=rating_average&searchParams=rlW0rKOyVwcoZ10fVzqyoaWyVwc7VwRvBygqYPVlVwcoKFjvZlV6J10fVwDvBygqYPW0rKOyVwblsFjvo3WcM2yhVwc7VwRvBygqYPVlVwcoKFjvZlV6JmRfZGx3KFjvAPV6J10fVaE5pTHvBwA9YPW5MJSlK2Mlo20vBwR5BQxfVayyLKWsqT8vBwVjZwVfVaWuqTyhM19zpz9gVwchqJkfYPWlLKEcozqsqT8vBz51oTjfVaEuMlV6J10fVzSwqT9lVwcoKFjvMTylMJA0o3VvBygqYPWwo21jo3AypvV6J10fVaAwpzIyoaqlnKEypvV6J10fVzS1qTuipvV6J10fVzAcozIgLKEiM3WupTuypvV6J10fVaOlo2E1L3Eco24vBygqYPWyMTy0VwcoKFjvp291ozDvBygqYPWmL2Iho2qlLKObrFV6J10fVz1up2fvBygqYPWwo3A0qJ1yplV6J10fVzAiozEcqTyioaZvBygqsD)
-na ČSFD.
 
 ## Vlastní scrapery
 

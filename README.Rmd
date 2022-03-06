@@ -101,23 +101,25 @@ Stažení stránky s uživatelskými recenzemi:
 csfd_fetch("/film/69432-star-trek-nova-generace/recenze/?page=2")
 ```
 
-## Podrobné vyhledávání
+## Vyhledávání
 
-Umožňuje funkce `csfd_search()`. Příklad:
+K vyhledávání slouží tři různé funkce:
 
-Seznam českých seriálů od roku 1989, řazený podle průměru hodnocení. Narozdíl
-od `csfd_fetch()` není třeba URL stránky, ale hodnoty vybraných parametrů.
+* [Podrobné vyhledávání](https://www.csfd.cz/podrobne-vyhledavani/): `csfd_search_titles()`
+* [Tvůrci](https://www.csfd.cz/podrobne-vyhledavani/tvurci/): `csfd_search_creators()`
+* [Žebříčky ](https://www.csfd.cz/zebricky/vlastni-vyber/): `csfd_search_ranks()`
+
+Příklad: Seznam českých seriálů od roku 1989, řazený podle průměru hodnocení.
+Narozdíl od `csfd_fetch()` není třeba URL stránky, ale hodnoty vybraných parametrů.
 
 ```{r eval=FALSE}
-csfd_search(
-  checkbox = "tv_show",
+csfd_search_titles(
+  type = "tv_show",
   origin = list(any = c("Česko", "Československo")),
-  year = c(1989, 2022),
+  released = c(1989, 2022),
   sort = "rating_average"
 )
 ```
-
-Srovnej s výsledkem [podrobného vyhledávání](https://www.csfd.cz/podrobne-vyhledavani/?sort=rating_average&searchParams=rlW0rKOyVwcoZ10fVzqyoaWyVwc7VwRvBygqYPVlVwcoKFjvZlV6J10fVwDvBygqYPW0rKOyVwblsFjvo3WcM2yhVwc7VwRvBygqYPVlVwcoKFjvZlV6JmRfZGx3KFjvAPV6J10fVaE5pTHvBwA9YPW5MJSlK2Mlo20vBwR5BQxfVayyLKWsqT8vBwVjZwVfVaWuqTyhM19zpz9gVwchqJkfYPWlLKEcozqsqT8vBz51oTjfVaEuMlV6J10fVzSwqT9lVwcoKFjvMTylMJA0o3VvBygqYPWwo21jo3AypvV6J10fVaAwpzIyoaqlnKEypvV6J10fVzS1qTuipvV6J10fVzAcozIgLKEiM3WupTuypvV6J10fVaOlo2E1L3Eco24vBygqYPWyMTy0VwcoKFjvp291ozDvBygqYPWmL2Iho2qlLKObrFV6J10fVz1up2fvBygqYPWwo3A0qJ1yplV6J10fVzAiozEcqTyioaZvBygqsD) na ČSFD.
 
 ## Vlastní scrapery
 
