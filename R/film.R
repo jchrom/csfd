@@ -56,7 +56,7 @@ film_details_parse <- function(x) {
     )
   )
 
-  out[2:6] <- lapply(out[2:6], as.integer)
+  out[2:7] <- lapply(out[2:7], as.integer)
 
   out
 }
