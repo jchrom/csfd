@@ -82,3 +82,22 @@ outer_paste <- function(x) {
 parentheses_outer_strip <- function(x) {
   stringr::str_remove_all(x, "(^[\\(]|[\\)]$)")
 }
+
+map2 <- function(.x, .y, .f, ...) {
+  mapply(.f, .x, .y, MoreArgs = list(...), SIMPLIFY = FALSE, USE.NAMES = TRUE)
+}
+
+compact <- function(x) Filter(length, x)
+
+csfd_abort <- function(msg, ..., .envir = parent.frame()) {
+
+  i <- unlist(list(...), use.names = FALSE)
+
+  if (length(i)) {
+    names(i) <- rep("i", length(i))
+  }
+
+  rlang::abort(vapply(c(msg, i), glue::glue, "", .envir = .envir))
+}
+
+globalVariables(".")
