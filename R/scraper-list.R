@@ -94,14 +94,27 @@ scraper_list_build <- function() {
 
   `podrobne-vyhledavani` <- list(
     ".*" = list(
-      results = search_results_scrape,
       paginator = search_paginator_scrape
+    ),
+    "^$" = list(
+      results = search_titles_scrape
+    ),
+    "^/tvurci" = list(
+      results = search_creators_scrape
     )
   )
 
   zebricky <- list(
-    "^/(vlastni|serialy|filmy)" = list(titles = leaderboard_titles_scrape),
-    "^/(herci|reziseri|scenariste)" = list(creators = leaderboard_creators_scrape)
+    "^/(serialy|filmy)" = list(
+      titles = leaderboard_titles_scrape
+    ),
+    "^/(herci|reziseri|scenariste)" = list(
+      creators = leaderboard_creators_scrape
+    ),
+    "^/vlastni" = list(
+      results = leaderboard_titles_scrape,
+      paginator = search_paginator_scrape
+    )
   )
 
   list(
