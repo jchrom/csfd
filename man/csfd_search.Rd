@@ -2,25 +2,58 @@
 % Please edit documentation in R/search.R
 \name{csfd_search}
 \alias{csfd_search}
+\alias{csfd_search_titles}
+\alias{csfd_search_creators}
+\alias{csfd_search_ranks}
+\alias{csfd_form_browse}
 \title{Advanced Search}
 \usage{
-csfd_search(
-  checkbox = NULL,
+csfd_search_titles(
+  type = NULL,
+  conditions = NULL,
   genre = NULL,
   origin = NULL,
   rating = NULL,
-  year = NULL,
+  released = NULL,
   fields = NULL,
   page = 1,
   sort = c("rated", "rating_average", "rating_average_asc", "fanclub_count", "year",
     "year_asc"),
   quiet = FALSE
 )
+
+csfd_search_creators(
+  type = NULL,
+  conditions = NULL,
+  born = NULL,
+  born_in = NULL,
+  died = NULL,
+  died_in = NULL,
+  gender = NULL,
+  page = 1,
+  sort = c("fanclub_count", "birth_date_asc", "birth_date"),
+  quiet = FALSE
+)
+
+csfd_search_ranks(
+  type = NULL,
+  origin = NULL,
+  released = NULL,
+  fields = NULL,
+  genre = NULL,
+  page = 1,
+  quiet = FALSE
+)
+
+csfd_form_browse(form = c("titles", "creators", "ranks"))
 }
 \arguments{
-\item{checkbox}{A vector of checkbox names to check.}
+\item{type, conditions}{A vector of checkbox names/dropdown options.}
 
-\item{genre, origin}{A named list of choices.
+\item{genre, origin}{For \code{csfd_search_ranks()}, a string, e.g. \code{"Polsko"}
+or \code{"tv_show"}.
+
+For \code{csfd_search_titles()}, a named list. Examples:
 \itemize{
 \item use \code{list(any = c("Fantasy", "Film-Noir"))} to get Fantasy or Film-Noir
 \item use \code{list(all = c("Fantasy", "Film-Noir"))} to get films which are both
@@ -29,80 +62,92 @@ Fantasy AND Film-Noir
 Fantasy AND Film-Noir and nothing else
 \item use \code{list(not = c("Fantasy", "Film-Noir"))} to exclude Fantasy and Film-Noir
 from the selection. Useful in combination with \code{any/all}.
-}
+}}
 
-Same logic applies to origin.}
-
-\item{rating, year}{A list of 2 numbers.
+\item{rating}{A vector of two numbers.
 \itemize{
 \item use \code{c(50, 80)} to get films rated between 50 and 80
-\item use \code{2020} to get films released in 2020 or later
 \item for \code{rating}, numbers between 0 and 1 also work, e.g. \code{c(0.75, 0.9)} is
 equivalent to \code{c(75, 90)}
 }}
 
-\item{fields}{A named list of entity identifiers. See \strong{Details.}}
+\item{released}{A vector of 1 to 2 numbers. Examples:
+\itemize{
+\item use \code{2020} to get films released in 2020 or later
+\item use \code{c(1940, 1960)} to get creators born between 1940 and 1960
+}}
+
+\item{fields}{A named list of numerical identifiers. Examples:
+\itemize{
+\item use \code{list(actor = c(483, 486), tag = 800)} to search for titles starring
+Leonard Nimoy (\code{tvurce/453}) and William Shatner (\code{tvurce/486}), tagged
+"Star Trek" (tag id \code{800}).
+}}
 
 \item{page}{Which page to retrieve.}
 
 \item{sort}{Results sorting.}
 
 \item{quiet}{If \code{TRUE}, request status will not be printed on the console.}
+
+\item{born, died}{A vector of date strings. Examples:
+\itemize{
+\item use \verb{c("01.01.1950", "31.12.2022)} to search creators born between
+these dates
+\item use \code{"500 BC"} to search creators born 500 BC - useful for authors such
+as Euripides
+}}
+
+\item{born_in, died_in}{A single country name.}
+
+\item{gender}{One of: \code{"male"}, \code{"female"}, \code{1}, \code{2} or \code{NULL}.}
+
+\item{form}{Which list of form fields to show.}
 }
 \value{
 An object of class \link{csfd_scraper}.
 }
 \description{
-Execute \href{https://www.csfd.cz/podrobne-vyhledavani}{advanced search} with your
-own parameters.
-}
-\details{
-Searching for creators and tags is a bit cumbersome, because they require
-special formatting. To search for a creator, use \verb{id:First Last (nar. YYYY, Country)}, where:
+Search pages on CSFD.
 \itemize{
-\item \code{id} is a numerical identifier (e.g. \code{453} in \code{tvurce/453-leonard-nimoy})
-\item \verb{First Last} should be a full name, e.g. \code{"Robert Downey Jr."}
-\item \code{YYYY} is a year of birth
-\item \code{Country} is a country of origin, e.g. \code{"USA"}
+\item use \code{csfd_search_titles()} to search for \href{https://www.csfd.cz/podrobne-vyhledavani/}{titles}
+\item use \code{csfd_search_creators()} to search for \href{https://www.csfd.cz/podrobne-vyhledavani/tvurci/}{creators}
+\item use \code{csfd_search_ranks()} to search \href{https://www.csfd.cz/zebricky/vlastni-vyber/}{rankings}
 }
 
-To search a tag, use \code{id:Name}, where:
-\itemize{
-\item \code{id} is a numerical identifier
-\item \code{name} is a full name of the tag, e.g. \code{"Star Trek"}
+Browse available form fields using \code{\link[=csfd_form_browse]{csfd_form_browse()}}, e.g. \code{csfd_form_browse("titles")}.
+}
+\section{Results}{
+
+
+The result of the search call is a scraper object with two items:
+\enumerate{
+\item \code{results}: A data frame with search results, including unique identifier.
+\item \code{paginator}: A data frame with \code{next_url} column, which redirects
+to the next page of results; if a missing value, it indicates there are
+no more results.
+}
 }
 
-This information is included on creator and film pages, and can be scraped
-using \code{\link[=csfd_fetch]{csfd_fetch()}}.
-
-Examples:\preformatted{fields = list(
-  actor = c(
-    "453:Leonard Nimoy (nar. 1931, USA)",
-    "486:William Shatner (nar. 1931, Kanada)"
-  ),
-  tag = c("17:budoucnost", "800:Star Trek")
-)
-
-csfd_search(checkbox = "film", fields = fields)
-}
-
-To see all available options, see \link{entities}. For example, to get a list
-of available checkboxes, call \code{entities$checkbox}.
-}
 \examples{
 
 \dontrun{
 
-# Search for films and TV shows made in the US only, either drama or sci-fi,
-# rated at least 80 and made between 2000 and 2022 (included).
-search <- csfd_search(
-  checkbox = c("film", "tv_show"),
+# Search for films and TV shows made in the US only, either drama or sci-fi
+# (and possibly other things except horror), rated at least 80 and made
+# between 2000 and 2022 (included).
+re <- csfd_search_titles(
+  type = c("film", "tv_show"),
   origin = list(exact = "USA"),
-  genre = list(any = c("Drama", "Sci-Fi")),
+  genre = list(any = c("Drama", "Sci-Fi"), not = c("horor")),
   rating = 80,
-  year = c(2000, 2022)
+  released = c(2000, 2022)
 )
 
-search$results
+re$results
+
+# As there are more results than would fit a single page, retrieve the next
+# page URL and use csfd_fetch() to get those.
+csfd_fetch(re$paginator$next_url)
 }
 }

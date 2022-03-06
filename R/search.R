@@ -1,44 +1,30 @@
 #' Advanced Search
 #'
-#' Execute [advanced search](https://www.csfd.cz/podrobne-vyhledavani) with your
-#' own parameters.
+#' @description
 #'
-#' @details
-#' Searching for creators and tags is a bit cumbersome, because they require
-#' special formatting. To search for a creator, use `id:First Last (nar. YYYY, Country)`, where:
+#' Search pages on CSFD.
 #'
-#' * `id` is a numerical identifier (e.g. `453` in `tvurce/453-leonard-nimoy`)
-#' * `First Last` should be a full name, e.g. `"Robert Downey Jr."`
-#' * `YYYY` is a year of birth
-#' * `Country` is a country of origin, e.g. `"USA"`
+#' * use `csfd_search_titles()` to search for [titles](https://www.csfd.cz/podrobne-vyhledavani/)
+#' * use `csfd_search_creators()` to search for [creators](https://www.csfd.cz/podrobne-vyhledavani/tvurci/)
+#' * use `csfd_search_ranks()` to search [rankings](https://www.csfd.cz/zebricky/vlastni-vyber/)
 #'
-#' To search a tag, use `id:Name`, where:
+#' Browse available form fields using [csfd_form_browse()], e.g. `csfd_form_browse("titles")`.
 #'
-#' * `id` is a numerical identifier
-#' * `name` is a full name of the tag, e.g. `"Star Trek"`
+#' @section Results:
 #'
-#' This information is included on creator and film pages, and can be scraped
-#' using [csfd_fetch()].
+#' The result of the search call is a scraper object with two items:
 #'
-#' Examples:
+#' 1. `results`: A data frame with search results, including unique identifier.
+#' 2. `paginator`: A data frame with `next_url` column, which redirects
+#'    to the next page of results; if a missing value, it indicates there are
+#'    no more results.
 #'
-#' ```
-#' fields = list(
-#'   actor = c(
-#'     "453:Leonard Nimoy (nar. 1931, USA)",
-#'     "486:William Shatner (nar. 1931, Kanada)"
-#'   ),
-#'   tag = c("17:budoucnost", "800:Star Trek")
-#' )
+#' @param form Which list of form fields to show.
+#' @param type,conditions A vector of checkbox names/dropdown options.
+#' @param genre,origin For `csfd_search_ranks()`, a string, e.g. `"Polsko"`
+#'   or `"tv_show"`.
 #'
-#' csfd_search(checkbox = "film", fields = fields)
-#' ```
-#'
-#' To see all available options, see [entities]. For example, to get a list
-#' of available checkboxes, call `entities$checkbox`.
-#'
-#' @param checkbox A vector of checkbox names to check.
-#' @param genre,origin A named list of choices.
+#'   For `csfd_search_titles()`, a named list. Examples:
 #'
 #'   * use `list(any = c("Fantasy", "Film-Noir"))` to get Fantasy or Film-Noir
 #'   * use `list(all = c("Fantasy", "Film-Noir"))` to get films which are both
@@ -48,68 +34,240 @@
 #'   * use `list(not = c("Fantasy", "Film-Noir"))` to exclude Fantasy and Film-Noir
 #'     from the selection. Useful in combination with `any/all`.
 #'
-#' Same logic applies to origin.
+#' @param released A vector of 1 to 2 numbers. Examples:
 #'
-#' @param rating,year A list of 2 numbers.
+#'   * use `2020` to get films released in 2020 or later
+#'   * use `c(1940, 1960)` to get creators born between 1940 and 1960
+#'
+#' @param born,died A vector of date strings. Examples:
+#'
+#'   * use `c("01.01.1950", "31.12.2022)` to search creators born between
+#'     these dates
+#'   * use `"500 BC"` to search creators born 500 BC - useful for authors such
+#'     as Euripides
+#'
+#' @param born_in,died_in A single country name.
+#' @param rating A vector of two numbers.
 #'
 #'   * use `c(50, 80)` to get films rated between 50 and 80
-#'   * use `2020` to get films released in 2020 or later
 #'   * for `rating`, numbers between 0 and 1 also work, e.g. `c(0.75, 0.9)` is
 #'     equivalent to `c(75, 90)`
 #'
-#' @param fields A named list of entity identifiers. See **Details.**
+#' @param fields A named list of numerical identifiers. Examples:
+#'
+#'  * use `list(actor = c(483, 486), tag = 800)` to search for titles starring
+#'    Leonard Nimoy (`tvurce/453`) and William Shatner (`tvurce/486`), tagged
+#'    "Star Trek" (tag id `800`).
+#'
+#' @param gender One of: `"male"`, `"female"`, `1`, `2` or `NULL`.
 #' @param page Which page to retrieve.
 #' @param sort Results sorting.
 #' @param quiet If `TRUE`, request status will not be printed on the console.
 #'
 #' @return An object of class [csfd_scraper].
-#' @export
-#'
 #' @examples
 #'
 #' \dontrun{
 #'
-#' # Search for films and TV shows made in the US only, either drama or sci-fi,
-#' # rated at least 80 and made between 2000 and 2022 (included).
-#' search <- csfd_search(
-#'   checkbox = c("film", "tv_show"),
+#' # Search for films and TV shows made in the US only, either drama or sci-fi
+#' # (and possibly other things except horror), rated at least 80 and made
+#' # between 2000 and 2022 (included).
+#' re <- csfd_search_titles(
+#'   type = c("film", "tv_show"),
 #'   origin = list(exact = "USA"),
-#'   genre = list(any = c("Drama", "Sci-Fi")),
+#'   genre = list(any = c("Drama", "Sci-Fi"), not = c("horor")),
 #'   rating = 80,
-#'   year = c(2000, 2022)
+#'   released = c(2000, 2022)
 #' )
 #'
-#' search$results
+#' re$results
+#'
+#' # As there are more results than would fit a single page, retrieve the next
+#' # page URL and use csfd_fetch() to get those.
+#' csfd_fetch(re$paginator$next_url)
 #' }
-csfd_search <- function(checkbox = NULL, genre = NULL, origin = NULL, rating = NULL,
-                        year = NULL, fields = NULL, page = 1,
-                        sort = c("rated", "rating_average", "rating_average_asc",
-                                 "fanclub_count", "year", "year_asc"),
-                        quiet = FALSE) {
+#' @name csfd_search
+NULL
 
-  sort <- rlang::arg_match(sort)
+#' @export
+#' @rdname csfd_search
+csfd_search_titles <- function(type = NULL, conditions = NULL, genre = NULL,
+                               origin = NULL, rating = NULL, released = NULL,
+                               fields = NULL,
+                               page = 1,
+                               sort = c("rated",
+                                        "rating_average",
+                                        "rating_average_asc",
+                                        "fanclub_count",
+                                        "year",
+                                        "year_asc"),
+                               quiet = FALSE) {
 
-  form <- list(
-    checked = form_option_checkbox(checkbox),
-    year    = form_option_year(year),
-    rating  = form_option_rating(rating),
-    genre   = form_option_genre(genre),
-    origin  = form_option_origin(origin),
-    fields  = form_option_fields(fields)
+  subm <- list(
+
+    option_simple(type, "type[]", opts_titles),
+
+    option_simple(conditions, "conditions[]", opts_titles),
+
+    genre %>%
+      map2(names(.), option_nested, field = "genre",  form = opts_titles) %>%
+      unname() %>%
+      unlist(recursive = FALSE),
+
+    origin %>%
+      map2(names(.), option_nested, field = "origin",  form = opts_titles) %>%
+      unname() %>%
+      unlist(recursive = FALSE),
+
+    list(rating_from = rating[1], rating_to = rating[2]) %>% na_drop(),
+
+    list(year_from = released[1], year_to = released[2]) %>% na_drop(),
+
+    option_string(fields),
+
+    "_do" = "filmsForm-submit"
   )
 
-  flat <- unlist(unname(form), recursive = FALSE, use.names = TRUE)
-
-  submission <- c(flat, list(`_do` = "filmsForm-submit"))
-
-  csfd_form_submit(submission, query = list(page = page, sort = sort),
-                   quiet = quiet)
+  csfd_form_submit(
+    form  = compact(unlist(subm, recursive = FALSE)),
+    query = list(page = page, sort = rlang::arg_match(sort)),
+    path  = "/podrobne-vyhledavani",
+    quiet = quiet
+  )
 }
 
-csfd_form_submit <- function(body, query, quiet = FALSE) {
+#' @export
+#' @rdname csfd_search
+csfd_search_creators <- function(type = NULL, conditions = NULL, born = NULL,
+                                 born_in = NULL, died = NULL, died_in = NULL,
+                                 gender = NULL,
+                                 page = 1,
+                                 sort = c("fanclub_count",
+                                          "birth_date_asc",
+                                          "birth_date"),
+                                 quiet = FALSE) {
 
-  req_search <- csfd_request_new("POST") %>%
-    httr2::req_url_path_append("/podrobne-vyhledavani") %>%
+  subm <- list(
+
+    option_simple(type, "type[]", opts_creators),
+
+    option_simple(conditions, "conditions[]", opts_creators),
+
+    option_simple(gender, "gender", opts_creators),
+
+    option_simple(born_in, "birth_country_id", opts_creators),
+
+    list(birth_from = born[1], birth_to = born[2]) %>% na_drop(),
+
+    option_simple(died_in, "death_country_id", opts_creators),
+
+    list(death_from = died[1], death_to = died[2]) %>% na_drop(),
+
+    "_do" = "creatorsForm-submit"
+  )
+
+  csfd_form_submit(
+    form  = compact(unlist(subm, recursive = FALSE)),
+    query = list(page = page, sort = rlang::arg_match(sort)),
+    path  = "/podrobne-vyhledavani/tvurci",
+    quiet = quiet
+  )
+}
+
+#' @export
+#' @rdname csfd_search
+csfd_search_ranks <- function(type = NULL, origin = NULL, released = NULL,
+                              fields = NULL, genre = NULL,
+                              page = 1,
+                              quiet = FALSE) {
+
+  subm <- list(
+
+    option_simple(type, "type", opts_ranks),
+
+    option_simple(origin, "origin", opts_ranks),
+
+    list(year_from = released[1], year_to = released[2]) %>% na_drop(),
+
+    option_string(fields),
+
+    option_simple(genre, "genre[]", opts_ranks),
+
+    "_do" = "specificSelectionForm-submit"
+  )
+
+  csfd_form_submit(
+    form  = compact(unlist(subm, recursive = FALSE)),
+    query = list(page = page),
+    path  = "/zebricky/vlastni-vyber",
+    quiet = quiet
+  )
+}
+
+#' @export
+#' @rdname csfd_search
+csfd_form_browse <- function(form = c("titles", "creators", "ranks")) {
+
+  switch(rlang::arg_match(form), titles = opts_titles, creators = opts_creators,
+         ranks = opts_ranks)
+}
+
+option_simple <- function(input, field, form) {
+
+  if (is.null(input)) return()
+
+  if (is.character(input)) {
+
+    opts <- form[[field]][input]
+
+    names(opts) <- rep(field, length(opts))
+
+    return(opts)
+  }
+
+  csfd_abort("`{substitute(input)}` must be a character vector")
+}
+
+option_nested <- function(input, mode, field, form) {
+
+  if (is.null(input)) return()
+
+  if (!mode %in% c("any", "all", "exact", "not")) {
+    csfd_abort('`mode` must be one of: "any", "all", "exact", "not"')
+  }
+
+  label <- if (identical(mode, "not")) "[exclude][]" else "[include][]"
+
+  vals <- form[[field]][input]
+
+  names(vals) <- paste0(field, rep(label, length(input)))
+
+  type <- list()
+
+  type[[paste0(field, "[type]")]] <- list(exact = "1", all = "2", any = "3")[[mode]]
+
+  c(type, vals)
+}
+
+option_string <- function(input, field, form) {
+
+  if (is.null(input)) return()
+
+  if (all(rlang::is_named(input), is.list(input), vapply(input, is.numeric, FALSE))) {
+
+    # The server needs these extra bit after every numerical identifier, or it
+    # won't return results. I guess there is a regex going on there.
+    out <- lapply(input, paste, ":.,", sep = "", collapse = "")
+    return(out)
+  }
+
+  csfd_abort("`{substitute(input)}` must be a named list of integer identifiers")
+}
+
+csfd_form_submit <- function(form, query, path, quiet = FALSE) {
+
+  req_form <- csfd_request_new("POST") %>%
+    httr2::req_url_path_append(path) %>%
     httr2::req_body_form(list(default = NULL)) %>%
     httr2::req_options(
       # Without the cookie, the server will not provide useful redirect URL. This
@@ -122,162 +280,24 @@ csfd_form_submit <- function(body, query, quiet = FALSE) {
   # In httr2 0.1.1, duplicate names are silently dropped. This is a problem,
   # because the checkboxes on the search page do not have unique names. So let's
   # inject the data directly.
-  req_search$body$data <- body
+  req_form$body$data <- form
 
   # Get the redirect to the results page.
-  resp <- csfd_request_perform(req_search, quiet = quiet)
+  resp <- csfd_request_perform(req_form, quiet = quiet)
 
   location <- httr2::resp_header(resp, "location")
 
-  req_redirect <- csfd_request_new("GET") %>%
+  if (is.null(location)) {
+    rlang::abort("redirect location is `NULL` (invalid search request?)")
+  }
+
+  req_results <- csfd_request_new("GET") %>%
     httr2::req_url(location) %>%
     httr2::req_url_query(!!!query) %>%
     # Applying the rate limit to the first request was probably enough.
     httr2::req_throttle(1)
 
-  resp <- csfd_request_perform(req_redirect, quiet = quiet)
+  resp <- csfd_request_perform(req_results, quiet = quiet)
 
   csfd_scraper(resp)
-}
-
-form_option_checkbox <- function(checkbox = NULL) {
-
-  if (is.null(checkbox)) return()
-
-  if (!is.character(checkbox)) {
-    rlang::abort("`checkbox` must be a character vector of checkbox labels")
-  }
-
-  form_option_check("checkbox", checkbox)
-
-  out <- entities$checkbox[checkbox]
-
-  names(out)[names(out) %in% names(entities$type)] <- "type[]"
-
-  names(out)[names(out) %in% names(entities$conditions)] <- "conditions[]"
-
-  out
-}
-
-form_option_rating <- function(rating = NULL) {
-
-  if (is.null(rating)) return()
-
-  if (!is.numeric(rating) || length(rating) > 2 || any(rating > 100)) {
-    rlang::abort("`rating` must be a vector of one or two percentages, either 1 to 100 or 0 to 1")
-  }
-
-  # This is to allow percentage as proportions, i.e. 0.5 would equal to 50%.
-  if (all(rating < 1)) rating <- rating * 100
-
-  names(rating) <- c("rating_from", "rating_to")[seq_along(rating)]
-
-  lapply(rating, as.integer)
-}
-
-form_option_year <- function(year = NULL) {
-
-  if (is.null(year)) return()
-
-  if (!is.numeric(year) || length(year) > 2 || any(nchar(year) != 4)) {
-    rlang::abort("`year` must be a vector of one or two four-digit years")
-  }
-
-  names(year) <- c("year_from", "year_to")[seq_along(year)]
-
-  lapply(year, as.integer)
-}
-
-form_option_genre <- function(genre = NULL) {
-
-  if (is.null(genre)) return()
-
-  out <- map2(genre, names(genre), form_option_pick, what = "genre")
-
-  unlist(out, recursive = FALSE, use.names = TRUE)
-}
-
-form_option_origin <- function(origin) {
-
-  if (is.null(origin)) return()
-
-  out <- map2(origin, names(origin), form_option_pick, what = "origin")
-
-  unlist(out, recursive = FALSE, use.names = TRUE)
-}
-
-map2 <- function(.x, .y, .f, ...) {
-  mapply(.f, .x, .y, MoreArgs = list(...), SIMPLIFY = FALSE, USE.NAMES = FALSE)
-}
-
-form_option_pick <- function(vals, what = c("origin", "genre"),
-                             mode = c("any", "all", "not", "exact")) {
-
-  what <- rlang::arg_match(what)
-
-  mode <- rlang::arg_match(mode)
-
-  form_option_check(what, vals)
-
-  label <- if (identical(mode, "not")) "[exclude][]" else "[include][]"
-
-  picks <- unique(entities[[what]][vals])
-
-  names(picks) <- rep(paste0(what, label), length(picks))
-
-  if (identical(mode, "not")) {
-    return(picks)
-  }
-
-  type <- list(what = list(exact = "1", all = "2", any = "3")[[mode]])
-
-  names(type) <- paste0(what, "[type]")
-
-  c(type, picks)
-}
-
-form_option_fields <- function(fields) {
-
-  if (is.null(fields)) return()
-
-  form_option_check("fields", names(fields))
-
-  form_option_vals <- function(vals) {
-
-    if (!is.character(vals)) {
-      rlang::abort("`fields` must be comprised of character vectors")
-    }
-
-    paste(vapply(vals, curl_escape2, ""), ",", sep = "", collapse = "")
-  }
-
-  lapply(fields, form_option_vals)
-}
-
-curl_escape2 <- function(x) {
-  # Need to escape everything except for the first colon, to comply with requested
-  # format on CSFD. I don't even.
-  sub("%3A", ":", curl::curl_escape(x), fixed = TRUE)
-}
-
-form_option_check <- function(what, nms) {
-
-  unknown <- setdiff(nms, names(entities[[what]]))
-
-  if (length(unknown)) {
-
-    options <- paste(unknown, collapse = ', ')
-    accepts <- paste('"', names(entities[[what]]), '"', collapse = ', ', sep = "")
-
-    if (nchar(accepts) > 500) {
-      accepts <- glue::glue("see `entities${what}`")
-    }
-
-    error <- "unknown `{what}` option: \"{options}\""
-    infor <- "accepted values are: {accepts}"
-
-    rlang::abort(c(glue::glue(error), i = glue::glue(infor)))
-  }
-
-  invisible()
 }
