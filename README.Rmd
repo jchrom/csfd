@@ -1,0 +1,178 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# csfd
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/jchrom/csfd/workflows/R-CMD-check/badge.svg)](https://github.com/jchrom/csfd/actions)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
+Smyslem balíčku csfd je umožnit novinářům a akademickým pracovníkům skrejpování
+veřejně přístupných dat z [Česko-Slovenské filmové databáze (ČSFD)](https://www.csfd.cz). Balíček není oficiálním produktem ČSFD a není určen
+ke komerčnímu využití. Pokud někdy v budoucnu ČSFD uvede do provozu standardní
+webovou API (po vzoru IMDB), bude balíček deprekován.
+
+## Instalace
+
+``` r
+# install.packages("devtools")
+devtools::install_github("jchrom/csfd")
+```
+
+## Frekvence stahování
+
+Frekvence stahování je omezena na 15 požadavků za minutu, aby se zamezilo
+přetěžování serveru neurvalým masovým skrejpováním.
+
+## Příklad
+
+Příkazem níže získáme stránku třetí série seriálu _Star Trek: Nová generace._
+Adresu https://www.csfd.cz/film/69432-star-trek-nova-generace/483364-serie-3/prehled/
+můžeme sice zadat celou, ale postačí i část s typem díla a číselný identifikátor
+(cesty audiovizuálních děl začínají na ČSFD vždy `/film`, bez ohledu na typ díla):
+
+```{r}
+library(csfd)
+tng <- csfd_fetch("/film/483364", quiet = TRUE)
+```
+
+Výsledkem je objekt `<csfds_scraper>`, který obsahuje zdrojový HTML kód a jednu
+nebo několik funkcí, určených k seškrabání dat. V příkladu níže jsou scrapery
+označeny symbolem `$`.
+
+```{r}
+tng
+```
+
+Vybraný scraper zavoláme stejně, jako když vracíme hodnotu při běžném indexování,
+například použitím `$`:
+
+```{r}
+tng$summary
+```
+
+`<csfds_scraper>` pozná, o jaký typ stránky se jedná, takže máte vždy k dispozici
+ty správné scrapery. Občas se stane, že má vrácená tabulka nula řádků, pokud určitá
+data na stránce chybí. Například tag cloud bývá na stránkách filmů/seriálů,
+ale pokud nikdo dané dílo neotagoval, data budou logicky chybět.
+
+## Další příklady
+
+Stažení stránky se seznamem epizod:
+
+```{r eval=FALSE}
+# Kmpletni URL.
+csfd_fetch("https://www.csfd.cz/film/69432-star-trek-nova-generace/epizody/")
+
+# Funguje i kratsi varianta.
+csfd_fetch("/film/69432/epizody/")
+```
+
+Stažení profilu herce:
+
+```{r eval=FALSE}
+# Text za ciselnym identifikatorem ("-patrick-stewart") neni nutny, ale ani nevadi.
+csfd_fetch("/tvurce/2052-patrick-stewart")
+```
+
+Stažení stránky s filmovými cenami. Důležitá je v tomto případě i část adresy
+za otazníkem, která určuje rozmezí let, v nichž bylo ocenění uděleno:
+
+```{r eval=FALSE}
+csfd_fetch("/oceneni/2-cesky-lev/?yearsSpan=2002-2011")
+```
+
+Stažení stránky s uživatelskými recenzemi:
+
+```{r eval=FALSE}
+csfd_fetch("/film/69432-star-trek-nova-generace/recenze/?page=2")
+```
+
+## Vyhledávání
+
+K vyhledávání slouží tři různé funkce:
+
+* [Podrobné vyhledávání](https://www.csfd.cz/podrobne-vyhledavani/): `csfd_search_titles()`
+* [Tvůrci](https://www.csfd.cz/podrobne-vyhledavani/tvurci/): `csfd_search_creators()`
+* [Žebříčky ](https://www.csfd.cz/zebricky/vlastni-vyber/): `csfd_search_ranks()`
+
+Příklad: Seznam českých seriálů od roku 1989, řazený podle průměru hodnocení.
+Narozdíl od `csfd_fetch()` není třeba URL stránky, ale hodnoty vybraných parametrů
+(pro zobrazení nápovědy použijte příkaz `?csfd_search`).
+
+```{r eval=FALSE}
+tv_shows <- csfd_search_titles(
+  type = "tv_show",
+  origin = list(any = c("Česko", "Československo")),
+  released = c(1989, 2022),
+  sort = "rating_average"
+)
+
+tv_shows$results
+```
+
+Vyhledání akčních filmů herečky Michelle Yeoh - číselný identifikátor pochází
+z URL adresy její [stránky na ČSFD](https://www.csfd.cz/tvurce/1818-michelle-yeoh/prehled/).
+
+```{r eval=FALSE}
+csfd_search_titles(
+  type   = c("film", "tv_film"),
+  genre  = "Akční",
+  fields = list(actor = 1818),
+  sort   = "year_asc"
+)
+```
+
+## Vlastní scrapery
+
+Balíček má pěkné pokrytí stránek filmů, seriálů a podobně. Stáhnout si ale můžete
+libovolnou ČSFD stránku a data seškrabat po svém, a to funkcemi z balíčků
+[rvest](https://rvest.tidyverse.org/) a [xml2](https://xml2.r-lib.org/).
+
+Zdrojový HTML kód lze získat přes pole `html`:
+
+```{r}
+tng$html
+```
+
+Takto získaný objekt typu `<xml_document>` nepřetrvá do příšího spuštění Rka,
+a nemá smysl jej ukládat na disk. Jedná se pouze o tzv. external pointer,
+který po ukončení Rka už na nic neukazuje. Je ale možné uložit celý `<csfd_scraper>`
+objekt, který uchovává HTML v podobě syrových bajtů, a v případě potřeby ho znovu
+načte do paměti (takže volání `tng$html` v příkladu bude fungovat vždycky).
+
+```{r eval=FALSE}
+saveRDS(tng, "tng.rds")
+```
+
+Případně zapsat HTML kód jako text:
+
+```{r eval=FALSE}
+xml2::write_html(tng$html, "tng.html")
+```
+
+## Nahlašování změn ve struktuře stránek
+
+Změny ve HTML struktuře stránek mohou mít za následek nesprávná nebo chybějící
+data. Protože je tento nástroj neoficiální a není vyvinut v součinnosti s ČSFD,
+není možné dopředu vědět, kdy se který HTML tag na které stránce změní.
+
+Pokud zjistíte, že vám `<csfds_scraper>` vrací nesprávná nebo chybějící data,
+nahlašte to prosím [zde](https://github.com/jchrom/csfd/issues/new).
+
+## Licence
+
+csfd podléhá licenčnímu ujednání [MIT](LICENSE.md).
